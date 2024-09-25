@@ -13,7 +13,6 @@ const pass = encodeURIComponent(process.env.MONGODB_PASSWORD);
 const connect = async () => {
     try {
         await mongoose.connect(`mongodb+srv://${username}:${pass}@cluster0.8ihgg.mongodb.net/registration`, {
-         
         });
         console.log("Connected to MongoDB");
     } catch (e) {
@@ -33,7 +32,7 @@ const Register = mongoose.model("Register", regSchema);
 app.use(body_parser.urlencoded({ extended: true }));
 app.use(body_parser.json());
 
-const port = process.env.PORT || 4008;
+const port = process.env.PORT || 5008;
 
 app.get("/", (req, res) => {
     res.sendFile(path.join(__dirname, 'pages', 'index.html'));
