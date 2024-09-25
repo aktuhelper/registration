@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login Form</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+ <style>
+    body {
+    background-image: url('https://images.unsplash.com/photo-1506748686214-e9df14d4d9d0'); /* Example food background */
+    background-size: cover; /* Cover the entire viewport */
+    background-position: center; /* Center the image */
+    background-repeat: no-repeat; /* Do not repeat the image */
+    height: 100vh; /* Full height */
+    margin: 0; /* Remove default margin */
+    display: flex; /* Center content */
+    align-items: center; /* Vertical center */
+    justify-content: center; /* Horizontal center */
+}
+
+.container {
+    background-color: rgba(255, 255, 255, 0.9); /* Semi-transparent white background */
+    border-radius: 0.5rem; /* Rounded corners */
+    padding: 30px; /* Padding around the content */
+    width: 100%; /* Full width */
+    max-width: 400px; /* Max width for the form */
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2); /* Enhanced shadow */
+}
+
+h2 {
+    color: #343a40; /* Dark gray for the title */
+}
+
+.form-control {
+    border-radius: 0.5rem; /* Rounded corners */
+}
+
+form {
+    border: 1px solid #ced4da; /* Light border */
+}
+
+.btn-primary {
+    background-color: #007bff; /* Bootstrap primary color */
+    border-color: #007bff;
+}
+
+.btn-primary:hover {
+    background-color: #0056b3; /* Darker blue on hover */
+    border-color: #0056b3;
+}
+
+.text-center a {
+    color: #007bff; /* Link color */
+}
+
+.text-center a:hover {
+    text-decoration: underline; /* Underline on hover */
+}
+
+ </style>
+</head>
+<body>
+
+<div class="container mt-5">
+    <h2 class="text-center mb-4">Login</h2>
+    <form action="/login" method="POST" class="shadow p-4 rounded">
+        <div class="form-group">
+            <label for="username">Username</label>
+            <input type="email" class="form-control" id="username" name="email" required>
+        </div>
+        <div class="form-group">
+            <label for="password">Password</label>
+            <input type="password" class="form-control" id="password" name="password" required>
+        </div>
+        <button type="submit" class="btn btn-primary btn-block">Login</button>
+    </form>
+    <div class="text-center mt-3">
+        <a href="/">Don't have an account? Register here</a>
+    </div>
+</div>
+
+<!-- Bootstrap JS and dependencies -->
+<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+</body>
+</html>

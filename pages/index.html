@@ -1,7 +1,6 @@
-
 <!DOCTYPE html>
 <html lang="en">
-  <head>
+<head>
     <meta charset="UTF-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -17,110 +16,99 @@
       integrity="sha384-rbsA2VBKQhggwzxH7pPCaAqO46MgnOM80zW1RWuH61DGLwZJEdK2Kadq2F9CUG65"
       crossorigin="anonymous"
     />
-    <title>Registration form</title>
-  </head>
-
-  <body class="background-radial-gradient">
+    <title>Registration Form</title>
     <style>
-      .background-radial-gradient {
-        background-color: hsl(219, 43%, 17%);
-        background-image: radial-gradient(
-            650px circle at 0% 0%,
-            hsl(218, 41%, 35%) 15%,
-            hsl(218, 41%, 30%) 35%,
-            hsl(218, 41%, 20%) 75%,
-            hsl(218, 41%, 19%) 80%,
-            transparent 100%
-          ),
-          radial-gradient(
-            1250px circle at 100% 100%,
-            hsl(218, 41%, 45%) 15%,
-            hsl(218, 41%, 30%) 35%,
-            hsl(218, 41%, 20%) 75%,
-            hsl(218, 41%, 19%) 80%,
-            transparent 100%
-          );
-      }
+        body {
+            background-image: url('https://images.unsplash.com/photo-1523292562803-8f5b120f8b83'); /* Food background image */
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            height: 100vh;
+            margin: 0;
+            display: flex; /* Flexbox for centering */
+            justify-content: center; /* Center horizontally */
+            align-items: center; /* Center vertically */
+        }
 
-      #radius-shape-1 {
-        height: 220px;
-        width: 220px;
-        top: 110px;
-        left: 130px;
-        background: radial-gradient(#44006b, #ad1fff);
-        overflow: hidden;
-      }
+        #radius-shape-1 {
+            height: 220px;
+            width: 220px;
+            top: 110px;
+            left: 130px;
+            background: radial-gradient(#5a67d8, #7f9cf5);
+            overflow: hidden;
+            position: absolute; /* Position to allow overlap */
+        }
 
-      #radius-shape-2 {
-        border-radius: 38% 62% 63% 37% / 70% 33% 67% 30%;
-        bottom: 30px;
-        right: 180px;
-        width: 200px;
-        height: 300px;
-        background: radial-gradient(#44006b, #ad1fff);
-        overflow: hidden;
-      }
+        #radius-shape-2 {
+            border-radius: 38% 62% 63% 37% / 70% 33% 67% 30%;
+            bottom: 30px;
+            right: 180px;
+            width: 200px;
+            height: 300px;
+            background: radial-gradient(#5a67d8, #7f9cf5);
+            overflow: hidden;
+            position: absolute; /* Position to allow overlap */
+        }
 
-      #card {
-        margin-top: 100px;
-        top: 7%;
-        right: 34%;
-        width: 450px;
-        margin: 100px auto;
-        text-align: center;
-        position: absolute;
-        background: hsl(0, 0%, 100%);
-        backdrop-filter: blur(30px);
-      }
-      .form-outline > input{
-        background-color: #ececec77;
-      }
+        #card {
+            width: 450px;
+            text-align: center;
+            background: rgba(255, 255, 255, 0.9); /* Semi-transparent white */
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2); /* Enhanced shadow */
+        }
+
+        .form-outline > input {
+            background-color: #ececec77; /* Slightly transparent input background */
+        }
+
+        .btn-secondary {
+            background-color: #6c757d;
+            border: none;
+        }
     </style>
+</head>
 
+<body>
     <section class="text-center">
-      <div
-        id="radius-shape-1"
-        class="position-absolute rounded-circle shadow-5-strong"
-      ></div>
-      <div id="radius-shape-2" class="position-absolute shadow-5-strong"></div>
-      <div class="card mx-9 lg-12 mx-md-5 shadow-5-strong" id="card">
-        <div class="card-body px-md-5 align-left">
-          <h2 class="fw-bold mb-5">Registration Form</h2>
+        <div id="radius-shape-1" class="position-absolute rounded-circle shadow-5-strong"></div>
+        <div id="radius-shape-2" class="position-absolute shadow-5-strong"></div>
+        <div class="card mx-9 lg-12 mx-md-5 shadow-5-strong" id="card">
+            <div class="card-body px-md-5 align-left">
+                <h2 class="fw-bold mb-5">Registration Form</h2>
+                <form method="post" action="/register" style="text-align: left">
+                    <div class="form-outline mb-4">
+                        <label class="form-label" for="form3Example1">Name</label>
+                        <input type="text" id="form3Example1" name="name" class="form-control" required />
+                    </div>
 
+                    <div class="form-outline mb-4">
+                        <label class="form-label" for="form3Example3">Email address</label>
+                        <input type="email" id="form3Example3" name="email" class="form-control" required />
+                    </div>
 
-          
-          <form method="post" action="/register" style="text-align: left">
-            <div class="form-outline mb-4">
-              <label class="form-label" for="form3Example1">Name</label>
-              <input type="text" id="form3Example1" name="name" class="form-control" />
+                    <div class="form-outline mb-4">
+                        <label class="form-label" for="form3Example4">Password</label>
+                        <input type="password" id="form3Example4" name="password" class="form-control" required />
+                    </div>
+
+                    <button type="submit" class="btn btn-primary btn-block mb-4">Register</button>
+                </form>
+
+                <div class="mt-4">
+                    <h4>Already have an account?</h4>
+                    <a href="/login" class="btn btn-secondary">Login Here</a>
+                </div>
             </div>
-
-            <div class="form-outline mb-4">
-              <label class="form-label" for="form3Example3"
-                >Email address</label
-              >
-              <input type="email" id="form3Example3"  name="email" class="form-control" />
-            </div>
-
-            <div class="form-outline mb-4">
-              <label class="form-label" for="form3Example4">Password</label>
-              <input type="password" id="form3Example4"  name="password" class="form-control" />
-            </div>
-
-            <button type="submit" class="btn btn-primary btn-block mb-4">
-              Register
-            </button>
-          </form>
-
-
         </div>
-      </div>
     </section>
 
     <script
-      src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.min.js"
-      integrity="sha384-cuYeSxntonz0PPNlHhBs68uyIAVpIIOZZ5JqeqvYYIcEL727kskC66kF92t6Xl2V"
-      crossorigin="anonymous"
+        src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.min.js"
+        integrity="sha384-cuYeSxntonz0PPNlHhBs68uyIAVpIIOZZ5JqeqvYYIcEL727kskC66kF92t6Xl2V"
+        crossorigin="anonymous"
     ></script>
-  </body>
+</body>
 </html>
