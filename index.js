@@ -32,7 +32,11 @@ const Register = mongoose.model("Register", regSchema);
 app.use(body_parser.urlencoded({ extended: true }));
 app.use(body_parser.json());
 
+
 const port = process.env.PORT || 3006;
+
+
+
 
 app.get("/", (req, res) => {
     res.sendFile(path.join(__dirname, 'pages', 'index.html'));
