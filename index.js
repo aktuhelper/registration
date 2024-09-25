@@ -13,8 +13,7 @@ const pass = encodeURIComponent(process.env.MONGODB_PASSWORD);
 const connect = async () => {
     try {
         await mongoose.connect(`mongodb+srv://${username}:${pass}@cluster0.8ihgg.mongodb.net/registration`, {
-            useNewUrlParser: true,
-            useUnifiedTopology: true
+         
         });
         console.log("Connected to MongoDB");
     } catch (e) {
