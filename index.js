@@ -2,31 +2,33 @@ const express = require('express');
 const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
 const dotenv = require('dotenv');
-const path = require('path'); 
+const path = require('path');
 const session = require('express-session');
+const MongoStore = require('connect-mongo');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
-const cookieParser= require('cookie-parser')
+const cookieParser = require('cookie-parser');
+
 const app = express();
 dotenv.config();
 
 const username = encodeURIComponent(process.env.MONGODB_USERNAME);
 const pass = encodeURIComponent(process.env.MONGODB_PASSWORD);
-const secret = encodeURIComponent(process.env.SESSION_SECRET);
+const secret = process.env.SESSION_SECRET;
 
-//authoruization
-const auth= async(req,res,next)=>{
-    try{
-        const token= req.cookies.jwt;
-        const verify= jwt.verify(token, process.env.JWT_SECRET)
-        req.token= token;
-        req.user= token;
-   
+// Authorization middleware
+const auth = async (req, res, next) => {
+    try {
+        const token = req.cookies.jwt;
+        const verify = jwt.verify(token, process.env.JWT_SECRET);
+        req.token = token;
+        req.user = verify; // Store verified user data
         next();
-    }catch(error){
-        res.send(error)
+    } catch (error) {
+        res.status(401).send("Unauthorized: Invalid token");
     }
-}
+};
+
 const connect = async () => {
     try {
         await mongoose.connect(`mongodb+srv://${username}:${pass}@cluster0.8ihgg.mongodb.net/registration`, {});
@@ -36,6 +38,7 @@ const connect = async () => {
     }
 };
 
+// Registration Schema
 const regSchema = new mongoose.Schema({
     name: String,
     email: String,
@@ -48,21 +51,21 @@ const regSchema = new mongoose.Schema({
     }]
 });
 
-// Secure password in database
-regSchema.pre("save", async function(next) {
+// Hash password before saving
+regSchema.pre("save", async function (next) {
     if (this.isModified("password")) {
         this.password = await bcrypt.hash(this.password, 10);
     }
     next();
 });
 
-// Generating token
-regSchema.methods.generateAuthToken = async function() {
+// Generate authentication token
+regSchema.methods.generateAuthToken = async function () {
     try {
         const token = jwt.sign({ _id: this._id.toString() }, process.env.JWT_SECRET);
         this.tokens = this.tokens.concat({ token });
         await this.save();
-        return token;  // Just return the token, no response handling here
+        return token;
     } catch (error) {
         throw new Error("Error generating token: " + error.message);
     }
@@ -73,15 +76,20 @@ const Register = mongoose.model("Register", regSchema);
 
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
+app.use(cookieParser());
 
-// Set up session management
+// Set up session management with MongoDB store
 app.use(session({
     secret: secret,
     resave: false,
     saveUninitialized: true,
+    store: MongoStore.create({
+        mongoUrl: `mongodb+srv://${username}:${pass}@cluster0.8ihgg.mongodb.net/registration`,
+        ttl: 14 * 24 * 60 * 60 // = 14 days
+    })
 }));
-app.use(cookieParser())
-const port = process.env.PORT || 6004;
+
+const port = process.env.PORT || 6003;
 
 // Middleware to check authentication
 function isAuthenticated(req, res, next) {
@@ -91,6 +99,7 @@ function isAuthenticated(req, res, next) {
     res.redirect('/login'); // Redirect to login if not authenticated
 }
 
+// Routes
 app.get("/", (req, res) => {
     res.sendFile(path.join(__dirname, 'pages', 'index.html'));
 });
@@ -99,11 +108,12 @@ app.post("/register", async (req, res) => {
     try {
         const { name, email, password } = req.body;
         const existing_user = await Register.findOne({ email: email });
-        
+
         if (!existing_user) {
             const regData = new Register({ name, email, password });
-            await regData.generateAuthToken(); // Generate token and save
+            const token = await regData.generateAuthToken(); // Generate token
             await regData.save();
+            res.cookie("jwt", token, { expires: new Date(Date.now() + 120000), httpOnly: true }); // Set cookie
             res.redirect("/login");
         } else {
             res.redirect("/error");
@@ -126,10 +136,12 @@ app.get("/error", (req, res) => {
 app.get("/login", (req, res) => {
     res.sendFile(path.join(__dirname, 'pages', 'login.html'));
 });
-app.get("/product",auth, (req, res) => {
+
+app.get("/product", auth, (req, res) => {
     res.sendFile(path.join(__dirname, 'home', 'product.html'));
 });
-//logout logic from database
+
+// Logout logic
 app.get("/logout", auth, async (req, res) => {
     try {
         const token = req.cookies.jwt; // Get the token from cookies
@@ -155,11 +167,11 @@ app.get("/logout", auth, async (req, res) => {
     }
 });
 
-
 app.use(express.static(path.join(__dirname, 'home')));
 app.get("/home", isAuthenticated, (req, res) => {
     res.sendFile(path.join(__dirname, 'home', 'home.html'));
 });
+
 // Login logic
 app.post("/login", async (req, res) => {
     try {
@@ -176,11 +188,7 @@ app.post("/login", async (req, res) => {
         const isMatch = await bcrypt.compare(password, useremail.password);
         if (isMatch) {
             const token = await useremail.generateAuthToken(); // Generate the token
-           //Set the cookie here
-            res.cookie("jwt", token, {
-               expires: new Date(Date.now() + 120000), // Cookie expiration
-               httpOnly: true
-         });
+            res.cookie("jwt", token, { expires: new Date(Date.now() + 120000), httpOnly: true }); // Set the cookie
             req.session.user = useremail; // Store user in session
             res.redirect("/home");
         } else {
@@ -191,7 +199,9 @@ app.post("/login", async (req, res) => {
         res.redirect("/error");
     }
 });
+
 app.listen(port, () => {
     console.log(`Server running at http://localhost:${port}`);
 });
+
 connect();
