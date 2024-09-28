@@ -1,7 +1,8 @@
+const dotenv = require('dotenv');
+dotenv.config(); 
 const express = require('express');
 const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
-const dotenv = require('dotenv');
 const path = require('path');
 const session = require('express-session');
 const MongoStore = require('connect-mongo');
@@ -10,7 +11,6 @@ const jwt = require('jsonwebtoken');
 const cookieParser = require('cookie-parser');
 
 const app = express();
-dotenv.config();
 
 const username = encodeURIComponent(process.env.MONGODB_USERNAME);
 const pass = encodeURIComponent(process.env.MONGODB_PASSWORD);
@@ -90,7 +90,7 @@ app.use(session({
 }));
 
 
-const port = process.env.PORT || 6005;
+const port = process.env.PORT || 6006;
 
 
 // Middleware to check authentication
