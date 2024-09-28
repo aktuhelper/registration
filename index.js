@@ -1,19 +1,35 @@
 const express = require('express');
 const mongoose = require('mongoose');
-const body_parser = require('body-parser');
+const bodyParser = require('body-parser');
 const dotenv = require('dotenv');
-const path = require('path'); // Import path module
+const path = require('path'); 
+const session = require('express-session');
+const bcrypt = require('bcrypt');
+const jwt = require('jsonwebtoken');
+const cookieParser= require('cookie-parser')
 const app = express();
-
 dotenv.config();
 
 const username = encodeURIComponent(process.env.MONGODB_USERNAME);
 const pass = encodeURIComponent(process.env.MONGODB_PASSWORD);
+const secret = encodeURIComponent(process.env.SESSION_SECRET);
 
+//authoruization
+const auth= async(req,res,next)=>{
+    try{
+        const token= req.cookies.jwt;
+        const verify= jwt.verify(token, process.env.JWT_SECRET)
+        req.token= token;
+        req.user= token;
+   
+        next();
+    }catch(error){
+        res.send(error)
+    }
+}
 const connect = async () => {
     try {
-        await mongoose.connect(`mongodb+srv://${username}:${pass}@cluster0.8ihgg.mongodb.net/registration`, {
-        });
+        await mongoose.connect(`mongodb+srv://${username}:${pass}@cluster0.8ihgg.mongodb.net/registration`, {});
         console.log("Connected to MongoDB");
     } catch (e) {
         console.log("Error connecting to MongoDB:", e);
@@ -23,20 +39,57 @@ const connect = async () => {
 const regSchema = new mongoose.Schema({
     name: String,
     email: String,
-    password: String
+    password: String,
+    tokens: [{
+        token: {
+            type: String,
+            required: true
+        }
+    }]
 });
+
+// Secure password in database
+regSchema.pre("save", async function(next) {
+    if (this.isModified("password")) {
+        this.password = await bcrypt.hash(this.password, 10);
+    }
+    next();
+});
+
+// Generating token
+regSchema.methods.generateAuthToken = async function() {
+    try {
+        const token = jwt.sign({ _id: this._id.toString() }, process.env.JWT_SECRET);
+        this.tokens = this.tokens.concat({ token });
+        await this.save();
+        return token;  // Just return the token, no response handling here
+    } catch (error) {
+        throw new Error("Error generating token: " + error.message);
+    }
+};
 
 // Model
 const Register = mongoose.model("Register", regSchema);
 
-app.use(body_parser.urlencoded({ extended: true }));
-app.use(body_parser.json());
+app.use(bodyParser.urlencoded({ extended: true }));
+app.use(bodyParser.json());
 
+// Set up session management
+app.use(session({
+    secret: secret,
+    resave: false,
+    saveUninitialized: true,
+}));
+app.use(cookieParser())
+const port = process.env.PORT || 6004;
 
-const port = process.env.PORT || 3006;
-
-
-
+// Middleware to check authentication
+function isAuthenticated(req, res, next) {
+    if (req.session.user) {
+        return next();
+    }
+    res.redirect('/login'); // Redirect to login if not authenticated
+}
 
 app.get("/", (req, res) => {
     res.sendFile(path.join(__dirname, 'pages', 'index.html'));
@@ -48,15 +101,12 @@ app.post("/register", async (req, res) => {
         const existing_user = await Register.findOne({ email: email });
         
         if (!existing_user) {
-            const regData = new Register({
-                name,
-                email,
-                password
-            });
+            const regData = new Register({ name, email, password });
+            await regData.generateAuthToken(); // Generate token and save
             await regData.save();
             res.redirect("/login");
         } else {
-            res.redirect("/error"); // Handle existing user case
+            res.redirect("/error");
         }
     } catch (error) {
         console.log(error);
@@ -64,6 +114,7 @@ app.post("/register", async (req, res) => {
     }
 });
 
+// Getting pages
 app.get("/success", (req, res) => {
     res.sendFile(path.join(__dirname, 'pages', 'success.html'));
 });
@@ -71,31 +122,76 @@ app.get("/success", (req, res) => {
 app.get("/error", (req, res) => {
     res.sendFile(path.join(__dirname, 'pages', 'error.html'));
 });
+
 app.get("/login", (req, res) => {
     res.sendFile(path.join(__dirname, 'pages', 'login.html'));
 });
-app.use(express.static(path.join(__dirname, 'home')));
+app.get("/product",auth, (req, res) => {
+    res.sendFile(path.join(__dirname, 'home', 'product.html'));
+});
+//logout logic from database
+app.get("/logout", auth, async (req, res) => {
+    try {
+        const token = req.cookies.jwt; // Get the token from cookies
+        res.clearCookie("jwt"); // Clear the JWT cookie
 
-app.get("/home", (req, res) => {
+        // Find the user and remove the token from the tokens array
+        const user = await Register.findById(req.user._id); // Fetch user by ID
+        if (user) {
+            user.tokens = user.tokens.filter(t => t.token !== token); // Remove the token
+            await user.save(); // Save the updated user document
+        }
+
+        req.session.destroy((err) => {
+            if (err) {
+                console.log(err);
+                return res.send("Error in logout");
+            }
+            res.redirect("/login"); // Redirect to login after logout
+        });
+    } catch (error) {
+        console.error(error);
+        res.send(error);
+    }
+});
+
+
+app.use(express.static(path.join(__dirname, 'home')));
+app.get("/home", isAuthenticated, (req, res) => {
     res.sendFile(path.join(__dirname, 'home', 'home.html'));
 });
-//login
-app.post("/login", async(req,res)=>{
-    try{
-const email = req.body.email;
-const password= req.body.password;
-const useremail= await Register.findOne({email:email});
-if(useremail.password===password){
-    res.redirect("/home");
-}else{
-    alert("invalid username or password")
-}
-    }catch(e){
+// Login logic
+app.post("/login", async (req, res) => {
+    try {
+        const email = req.body.email;
+        const password = req.body.password;
+        const useremail = await Register.findOne({ email: email });
+
+        // Check if user exists
+        if (!useremail) {
+            return res.redirect("/error"); // User not found, redirect to error
+        }
+
+        // Compare password
+        const isMatch = await bcrypt.compare(password, useremail.password);
+        if (isMatch) {
+            const token = await useremail.generateAuthToken(); // Generate the token
+           //Set the cookie here
+            res.cookie("jwt", token, {
+               expires: new Date(Date.now() + 120000), // Cookie expiration
+               httpOnly: true
+         });
+            req.session.user = useremail; // Store user in session
+            res.redirect("/home");
+        } else {
+            res.redirect("/error"); // Handle invalid login
+        }
+    } catch (e) {
+        console.log(e);
         res.redirect("/error");
     }
-})
+});
 app.listen(port, () => {
     console.log(`Server running at http://localhost:${port}`);
 });
-
 connect();
