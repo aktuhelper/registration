@@ -1,7 +1,8 @@
+const dotenv = require('dotenv');
+dotenv.config();
 const express = require('express');
 const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
-const dotenv = require('dotenv');
 const path = require('path');
 const session = require('express-session');
 const MongoStore = require('connect-mongo');
@@ -10,11 +11,14 @@ const jwt = require('jsonwebtoken');
 const cookieParser = require('cookie-parser');
 
 const app = express();
-dotenv.config();
 
+// Encode MongoDB credentials
 const username = encodeURIComponent(process.env.MONGODB_USERNAME);
 const pass = encodeURIComponent(process.env.MONGODB_PASSWORD);
 const secret = process.env.SESSION_SECRET;
+
+// Debugging: Log the session secret to ensure it's loaded
+console.log("Session secret:", secret);
 
 // Authorization middleware
 const auth = async (req, res, next) => {
@@ -29,12 +33,13 @@ const auth = async (req, res, next) => {
     }
 };
 
+// Connect to MongoDB
 const connect = async () => {
     try {
         await mongoose.connect(`mongodb+srv://${username}:${pass}@cluster0.8ihgg.mongodb.net/registration`, {});
         console.log("Connected to MongoDB");
     } catch (e) {
-        console.log("Error connecting to MongoDB:", e);
+        console.error("Error connecting to MongoDB:", e);
     }
 };
 
@@ -89,9 +94,7 @@ app.use(session({
     })
 }));
 
-
-const port = process.env.PORT || 6003;
-
+const port = process.env.PORT || 6009;
 
 // Middleware to check authentication
 function isAuthenticated(req, res, next) {
@@ -121,7 +124,7 @@ app.post("/register", async (req, res) => {
             res.redirect("/error");
         }
     } catch (error) {
-        console.log(error);
+        console.error(error);
         res.redirect("/error");
     }
 });
@@ -158,7 +161,7 @@ app.get("/logout", auth, async (req, res) => {
 
         req.session.destroy((err) => {
             if (err) {
-                console.log(err);
+                console.error(err);
                 return res.send("Error in logout");
             }
             res.redirect("/login"); // Redirect to login after logout
@@ -197,13 +200,15 @@ app.post("/login", async (req, res) => {
             res.redirect("/error"); // Handle invalid login
         }
     } catch (e) {
-        console.log(e);
+        console.error(e);
         res.redirect("/error");
     }
 });
 
+// Start the server
 app.listen(port, () => {
     console.log(`Server running at http://localhost:${port}`);
 });
 
+// Connect to MongoDB
 connect();
