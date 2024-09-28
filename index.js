@@ -89,7 +89,9 @@ app.use(session({
     })
 }));
 
+
 const port = process.env.PORT || 6003;
+
 
 // Middleware to check authentication
 function isAuthenticated(req, res, next) {
