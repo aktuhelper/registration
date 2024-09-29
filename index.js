@@ -93,7 +93,6 @@ app.use(session({
         ttl: 14 * 24 * 60 * 60 // = 14 days
     })
 }));
-
 const port = process.env.PORT || 6009;
 
 // Middleware to check authentication
